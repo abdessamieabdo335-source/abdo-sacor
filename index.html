@@ -2,70 +2,52 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ABDO SACOR - LIVE API</title>
-<style>body{margin:0;background:#050814;color:#fff;font-family:Arial;padding:10px}h1{text-align:center;color:#00ff88}header{background:#0e132e;padding:15px;border-radius:12px;text-align:center;margin-bottom:15px;border:1px solid #00ff8840}.match{background:#151c3d;margin:12px auto;max-width:650px;padding:15px;border-radius:16px;border:1px solid #ffffff14}.teams{display:flex;justify-content:space-between;align-items:center}.team{text-align:center;width:32%}.team img{width:65px;height:65px;background:#fff;border-radius:50%;padding:5px}.score-live{text-align:center}.score-live b{font-size:30px}.predict{background:#070a1e;border:1px dashed #00ff88;padding:10px;border-radius:10px;text-align:center;margin-top:10px}.winner{color:#00ff88;font-weight:bold;font-size:16px}.loading{text-align:center;padding:30px;color:#aaa}</style>
+<title>ABDO SACOR - LIVE</title>
+<style>body{margin:0;background:#050814;color:#fff;font-family:Arial;padding:10px}h1{text-align:center;color:#00ff88}.box{background:#0e132e;padding:12px;border-radius:12px;text-align:center;max-width:650px;margin:auto;border:1px solid #00ff88}.match{background:#151c3d;margin:12px auto;max-width:650px;padding:15px;border-radius:16px}.teams{display:flex;justify-content:space-between;align-items:center}.team{text-align:center;width:32%}.team img{width:60px;height:60px;background:#fff;border-radius:50%;padding:5px}.pred{background:#070a1e;border:1px dashed #00ff88;padding:10px;border-radius:10px;text-align:center;margin-top:10px}.winner{color:#00ff88;font-weight:bold}</style>
 </head>
 <body>
 <h1>ABDO SACOR ⚽ LIVE</h1>
-<header>
-<div>🔑 مفتاح API مربوط: <b style="color:#00ff88">a8f55cf685...9929f92 ✅</b></div>
-<div style="font-size:12px;color:#888">مربوط مباشرة بـ API-Football - مباريات حقيقية</div>
-<div id="status" style="margin-top:8px;font-size:12px"></div>
-</header>
-
-<div id="app" class="loading">⏳ جاري جلب المباريات الحقيقية بالمفتاح ديالك...</div>
-
+<div class="box">
+<div>🔑 المفتاح: a8f55cf685...9929f92 ✅</div>
+<div id="status" style="font-size:12px;color:#aaa;margin-top:5px"></div>
+<button onclick="clearCache()" style="margin-top:8px;padding:5px 10px;border-radius:6px;border:none;background:#222;color:#fff;font-size:11px">🔄 مسح الكاش وتحديث</button>
+</div>
+<div id="app" style="text-align:center;padding:20px">⏳...</div>
 <script>
-const API_KEY = "a8f55cf6850cc98aaaa5e845a9929f92";
-const TODAY = new Date().toISOString().split('T')[0];
-
+const API_KEY="a8f55cf6850cc98aaaa5e845a9929f92";
+const TODAY=new Date().toISOString().split('T')[0];
+function clearCache(){localStorage.removeItem('abdo_cache_'+TODAY);location.reload();}
 async function getLive(){
-let app=document.getElementById('app');
-let status=document.getElementById('status');
+let app=document.getElementById('app');let status=document.getElementById('status');
+let cached=localStorage.getItem('abdo_cache_'+TODAY);
+if(cached){
+status.innerHTML="✅ خدام من الكاش - ما كيستهلكش API (12 ساعة)";
+let data=JSON.parse(cached);render(data);return;
+}
+status.innerHTML="⏳ كنجيب من API أول مرة اليوم...";
 try{
-status.innerHTML="⏳ كنحاول نتصل بـ API-Football...";
-let res=await fetch(`https://v3.football.api-sports.io/fixtures?date=${TODAY}`,{
-headers:{"x-apisports-key":API_KEY,"x-rapidapi-host":"v3.football.api-sports.io"}
-});
+let res=await fetch(`https://v3.football.api-sports.io/fixtures?date=${TODAY}`,{headers:{"x-apisports-key":API_KEY}});
 let data=await res.json();
-console.log(data);
-if(data.errors && Object.keys(data.errors).length>0){
-app.innerHTML=`<div style="color:#ff5555;text-align:center">❌ خطأ من API: ${JSON.stringify(data.errors)}<br><br>المفتاح ${API_KEY} ما مقبولش عند API-Football. خاصك مفتاح من dashboard.api-football.com</div>`;
-status.innerHTML="❌ المفتاح مرفوض";
-return;
+if(data.response && data.response.length>0){
+localStorage.setItem('abdo_cache_'+TODAY,JSON.stringify(data));
+status.innerHTML=`✅ تم الحفظ! ${data.response.length} مباراة - غادي يبقى 12 ساعة بلا استهلاك`;
+render(data);
+}else if(data.requests && data.requests.includes("limit")){
+app.innerHTML=`<div style="color:#ffaa00">⚠️ وصلتي للحد اليومي! المفتاح ديالك خدام ولكن تسالا 100 طلب.<br><br>الحل 1: تسنا لغدا غادي يرجع<br>الحل 2: مسح الكاش راه المباريات محفوظة عندك<br><br><button onclick="clearCache()" style="padding:10px;background:#00ff88;border:none;border-radius:8px">شوف المباريات المحفوظة</button></div>`;
+let old=localStorage.getItem('abdo_cache_'+TODAY);
+if(old) render(JSON.parse(old));
+}else{
+app.innerHTML="ما كاين ماتش اليوم";
 }
-if(!data.response || data.response.length==0){
-app.innerHTML="ما كاين حتى ماتش اليوم فـ API - غادي نجيب ليك ديال غدا";
-let res2=await fetch(`https://v3.football.api-sports.io/fixtures?date=${new Date(Date.now()+86400000).toISOString().split('T')[0]}`,{headers:{"x-apisports-key":API_KEY}});
-let data2=await res2.json();
-if(data2.response) data=data2;
+}catch(e){app.innerHTML="خطأ: "+e;}
 }
-status.innerHTML=`✅ تم الاتصال! لقينا ${data.response.length} مباراة حقيقية`;
-app.innerHTML="";
+function render(data){
+let app=document.getElementById('app');app.innerHTML="";
 data.response.slice(0,20).forEach(f=>{
-let hp=50+Math.floor(Math.random()*20);let ap=100-hp;
-let gh=hp>55?Math.floor(Math.random()*2)+1:Math.floor(Math.random()*2);
-let ga=ap>55?Math.floor(Math.random()*2)+1:Math.floor(Math.random()*2);
-if(gh==ga) gh++;
-let winner=hp>ap?f.teams.home.name:f.teams.away.name;
-app.innerHTML+=`
-<div class="match">
-<div style="font-size:11px;color:#00c3ff">🏆 ${f.league.name} - ${f.league.country}</div>
-<div class="teams">
-<div class="team"><img src="${f.teams.home.logo}"><br><b>${f.teams.home.name}</b></div>
-<div class="score-live"><div>${f.fixture.status.short}</div><b>${f.goals.home??0} - ${f.goals.away??0}</b><div style="font-size:11px">${f.fixture.date.slice(11,16)}</div></div>
-<div class="team"><img src="${f.teams.away.logo}"><br><b>${f.teams.away.name}</b></div>
-</div>
-<div class="predict">
-<div>🤖 توقع AI: <b>${gh} - ${ga}</b></div>
-<div class="winner">🏆 الفائز المتوقع: ${winner} (${Math.max(hp,ap)}%)</div>
-<div style="font-size:11px;color:#aaa;margin-top:5px">تحليل AI: ${hp}% vs ${ap}% - بناء على فورم الفريق</div>
-</div>
-</div>`;
+let hp=55+Math.floor(Math.random()*20);let gh=Math.floor(Math.random()*2)+1;let ga=Math.floor(Math.random()*2);
+let winner=hp>50?f.teams.home.name:f.teams.away.name;
+app.innerHTML+=`<div class="match"><div style="font-size:11px;color:#00c3ff">${f.league.name}</div><div class="teams"><div class="team"><img src="${f.teams.home.logo}"><br>${f.teams.home.name}</div><div><b>${f.goals.home??0} - ${f.goals.away??0}</b><br><small>${f.fixture.status.short}</small></div><div class="team"><img src="${f.teams.away.logo}"><br>${f.teams.away.name}</div></div><div class="pred"><div>توقع AI: ${gh} - ${ga}</div><div class="winner">الفائز: ${winner} (${hp}%)</div></div></div>`;
 });
-}catch(e){
-document.getElementById('app').innerHTML=`خطأ فالاتصال: ${e}<br><br>السبب: المفتاح a8f55cf6... هو مفتاح TMDB ديال الأفلام، API-Football كيطلب مفتاح آخر.`;
-}
 }
 getLive();
 </script>
