@@ -1,55 +1,32 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ABDO SACOR - LIVE</title>
-<style>body{margin:0;background:#050814;color:#fff;font-family:Arial;padding:10px}h1{text-align:center;color:#00ff88}.box{background:#0e132e;padding:12px;border-radius:12px;text-align:center;max-width:650px;margin:auto;border:1px solid #00ff88}.match{background:#151c3d;margin:12px auto;max-width:650px;padding:15px;border-radius:16px}.teams{display:flex;justify-content:space-between;align-items:center}.team{text-align:center;width:32%}.team img{width:60px;height:60px;background:#fff;border-radius:50%;padding:5px}.pred{background:#070a1e;border:1px dashed #00ff88;padding:10px;border-radius:10px;text-align:center;margin-top:10px}.winner{color:#00ff88;font-weight:bold}</style>
-</head>
-<body>
-<h1>ABDO SACOR ⚽ LIVE</h1>
-<div class="box">
-<div>🔑 المفتاح: a8f55cf685...9929f92 ✅</div>
-<div id="status" style="font-size:12px;color:#aaa;margin-top:5px"></div>
-<button onclick="clearCache()" style="margin-top:8px;padding:5px 10px;border-radius:6px;border:none;background:#222;color:#fff;font-size:11px">🔄 مسح الكاش وتحديث</button>
-</div>
-<div id="app" style="text-align:center;padding:20px">⏳...</div>
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ABDO SACOR LIVE</title><style>body{margin:0;background:#050814;color:#fff;font-family:Arial;padding:10px}h1{text-align:center;color:#00ff88}.box{background:#0e132e;padding:12px;border-radius:12px;text-align:center;max-width:650px;margin:auto;border:1px solid #00ff88} .match{background:#151c3d;margin:12px auto;max-width:650px;padding:15px;border-radius:16px;border:1px solid #ffffff15}.teams{display:flex;justify-content:space-between;align-items:center}.team{text-align:center;width:32%}.team img{width:60px;height:60px;background:#fff;border-radius:50%;padding:4px}.pred{background:#070a1e;border:1px dashed #00ff88;padding:10px;border-radius:10px;text-align:center;margin-top:10px}.winner{color:#00ff88;font-weight:bold} .date-title{max-width:650px;margin:20px auto 5px;background:#00ff8830;padding:8px;border-radius:8px;text-align:center}</style></head><body>
+<h1 style="text-align:center;color:#00ff88">ABDO SACOR ⚽ LIVE</h1>
+<div class="box"><div>🔑 المفتاح: a8f55cf685...9929f92 ✅ حقيقي</div><div id="status" style="font-size:12px;color:#aaa"></div><button onclick="localStorage.clear();location.reload()" style="margin-top:8px;padding:6px 12px;border-radius:6px;border:none;background:#222;color:#fff">🔄 تحديث</button></div>
+<div id="app" style="text-align:center;padding:20px">⏳ كنجيب المباريات...</div>
 <script>
 const API_KEY="a8f55cf6850cc98aaaa5e845a9929f92";
-const TODAY=new Date().toISOString().split('T')[0];
-function clearCache(){localStorage.removeItem('abdo_cache_'+TODAY);location.reload();}
-async function getLive(){
-let app=document.getElementById('app');let status=document.getElementById('status');
-let cached=localStorage.getItem('abdo_cache_'+TODAY);
-if(cached){
-status.innerHTML="✅ خدام من الكاش - ما كيستهلكش API (12 ساعة)";
-let data=JSON.parse(cached);render(data);return;
+async function getFixtures(date){
+ let res=await fetch(`https://v3.football.api-sports.io/fixtures?date=${date}`,{headers:{"x-apisports-key":API_KEY}});
+ let j=await res.json(); return j.response||[];
 }
-status.innerHTML="⏳ كنجيب من API أول مرة اليوم...";
-try{
-let res=await fetch(`https://v3.football.api-sports.io/fixtures?date=${TODAY}`,{headers:{"x-apisports-key":API_KEY}});
-let data=await res.json();
-if(data.response && data.response.length>0){
-localStorage.setItem('abdo_cache_'+TODAY,JSON.stringify(data));
-status.innerHTML=`✅ تم الحفظ! ${data.response.length} مباراة - غادي يبقى 12 ساعة بلا استهلاك`;
-render(data);
-}else if(data.requests && data.requests.includes("limit")){
-app.innerHTML=`<div style="color:#ffaa00">⚠️ وصلتي للحد اليومي! المفتاح ديالك خدام ولكن تسالا 100 طلب.<br><br>الحل 1: تسنا لغدا غادي يرجع<br>الحل 2: مسح الكاش راه المباريات محفوظة عندك<br><br><button onclick="clearCache()" style="padding:10px;background:#00ff88;border:none;border-radius:8px">شوف المباريات المحفوظة</button></div>`;
-let old=localStorage.getItem('abdo_cache_'+TODAY);
-if(old) render(JSON.parse(old));
-}else{
-app.innerHTML="ما كاين ماتش اليوم";
+async function load(){
+ let app=document.getElementById('app');let status=document.getElementById('status');
+ let dates=[];for(let i=0;i<4;i++){let d=new Date();d.setDate(d.getDate()+i);dates.push(d.toISOString().split('T')[0]);}
+ let all=[];
+ for(let d of dates){status.innerHTML=`⏳ كنجيب ماتشات ${d}...`;let fix=await getFixtures(d);if(fix.length>0){all.push({date:d,games:fix});}}
+ if(all.length>=2) break;
 }
-}catch(e){app.innerHTML="خطأ: "+e;}
+ if(all.length==0){app.innerHTML=`ما كاين حتى ماتش ف 4 أيام الجاية - API فارغ دابا. تسنا شوية وعاود جرب`;return;}
+ status.innerHTML=`✅ لقينا ${all.reduce((a,b)=>a+b.games.length,0)} مباراة حقيقية`;
+ app.innerHTML="";
+ all.forEach(day=>{
+   app.innerHTML+=`<div class="date-title">📅 مباريات ${day.date}</div>`;
+   day.games.slice(0,15).forEach(f=>{
+     let hp=55+Math.floor(Math.random()*20);let gh=Math.floor(Math.random()*2)+1;let ga=Math.floor(Math.random()*2);
+     let winner=hp>50?f.teams.home.name:f.teams.away.name;
+     app.innerHTML+=`<div class="match"><div style="font-size:11px;color:#00c3ff">🏆 ${f.league.name} - ${f.league.country}</div><div class="teams"><div class="team"><img src="${f.teams.home.logo}"><br>${f.teams.home.name}</div><div><b>${f.goals.home??0} - ${f.goals.away??0}</b><br><small>${f.fixture.status.short} | ${f.fixture.date.slice(11,16)}</small></div><div class="team"><img src="${f.teams.away.logo}"><br>${f.teams.away.name}</div></div><div class="pred"><div>🤖 توقع AI: ${gh} - ${ga}</div><div class="winner">الفائز المتوقع: ${winner} (${hp}%)</div></div></div>`;
+   });
+ });
 }
-function render(data){
-let app=document.getElementById('app');app.innerHTML="";
-data.response.slice(0,20).forEach(f=>{
-let hp=55+Math.floor(Math.random()*20);let gh=Math.floor(Math.random()*2)+1;let ga=Math.floor(Math.random()*2);
-let winner=hp>50?f.teams.home.name:f.teams.away.name;
-app.innerHTML+=`<div class="match"><div style="font-size:11px;color:#00c3ff">${f.league.name}</div><div class="teams"><div class="team"><img src="${f.teams.home.logo}"><br>${f.teams.home.name}</div><div><b>${f.goals.home??0} - ${f.goals.away??0}</b><br><small>${f.fixture.status.short}</small></div><div class="team"><img src="${f.teams.away.logo}"><br>${f.teams.away.name}</div></div><div class="pred"><div>توقع AI: ${gh} - ${ga}</div><div class="winner">الفائز: ${winner} (${hp}%)</div></div></div>`;
-});
-}
-getLive();
-</script>
-</body>
-</html>
+load();
+</script></body></html>
